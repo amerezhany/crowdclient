@@ -22,7 +22,8 @@ args = parser.parse_args()
 actions_dic = {
     'add': '[usernames] [groups]',
     'remove': '[usernames] [groups]',
-    'list-users': '[group]'
+    'list-users': '[group]',
+    'list-groups': '[user]',
 }
 
 def actions_usage():
@@ -57,32 +58,32 @@ headers = {'content-type': 'application/xml'}
 crowd_url = 'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1'
 
 def users_groups_manip(act):
-        # TODO: add code to check if particular user of group exists
-        username_s_l = args.username_s.split(',')
-        group_s_l = args.group_s.split(',')
-        for username in username_s_l:
-            for group in group_s_l:
-                try:
-                    if act == 'add':
-                        values = '<?xml version="1.0" encoding="UTF-8"?> <group name="' + group + '"/>'
-                        url_post = crowd_url + '/user/group/direct?username=' + username 
-                        s = requests.post(url_post, data=values, headers=headers, auth=(auth_user, auth_pass))
+    # TODO: add code to check if particular user of group exists
+    username_s_l = args.username_s.split(',')
+    group_s_l = args.group_s.split(',')
+    for username in username_s_l:
+        for group in group_s_l:
+            try:
+                if act == 'add':
+                    values = '<?xml version="1.0" encoding="UTF-8"?> <group name="' + group + '"/>'
+                    url_post = crowd_url + '/user/group/direct?username=' + username 
+                    s = requests.post(url_post, data=values, headers=headers, auth=(auth_user, auth_pass))
 
-                        if s.status_code == 201:
-                            print("User: `" + username + "' added to `" + group + "'")
-                        else:
-                            print("User: `" + username + "' was not added to `" + group + "'")
+                    if s.status_code == 201:
+                        print("User: `" + username + "' added to `" + group + "'")
                     else:
-                        url_delete = crowd_url + '/user/group/direct?username=' + username + '&groupname=' + group
-                        s = requests.delete(url_delete, auth=(auth_user, auth_pass))
+                        print("User: `" + username + "' was not added to `" + group + "'")
+                else:
+                    url_delete = crowd_url + '/user/group/direct?username=' + username + '&groupname=' + group
+                    s = requests.delete(url_delete, auth=(auth_user, auth_pass))
 
-                        if s.status_code == 204:
-                            print("User: `" + username + "' removed from `" + group + "'")
-                        else:
-                            print("User: `" + username + "' was not removed from `" + group + "'")
+                    if s.status_code == 204:
+                        print("User: `" + username + "' removed from `" + group + "'")
+                    else:
+                        print("User: `" + username + "' was not removed from `" + group + "'")
 
-                except Exception:
-                    print("\n" + sys.argv[0] + ": cannot update: `" + group + "' with user: `" + username + "'\n")
+            except Exception:
+                print("\n" + sys.argv[0] + ": cannot update: `" + group + "' with user: `" + username + "'\n")
 
 def list_users_nested():
     g = args.group_s.split(',')
@@ -106,6 +107,28 @@ def list_users_nested():
     for user in t.findall('user'):
         print user.get('name')
 
+def list_groups_nested():
+    u = args.username_s.split(',')
+    user = ''
+    for i in u:
+        user += i
+
+    if len(u) > 1:
+        print("\n" + sys.argv[0] + ": Please specify only one user to list groups he/she is a nested member of\n")
+        sys.exit()
+
+    url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/nested?username=' + user
+    s = requests.get(url_get, auth=(auth_user, auth_pass))
+
+    if s.status_code != 200:
+        print("\n" + sys.argv[0] + ": no such user found: `" + user + "'\n")
+        sys.exit()
+
+    t = ET.fromstring(s.text)
+    print "\nMembership of a user: `" + user + "':"
+    for group in t.findall('group'):
+        print group.get('name')
+
 def main():
     if sys.argv[1] == 'add':
         users_groups_manip("add")
@@ -113,6 +136,8 @@ def main():
         users_groups_manip("remove")
     elif sys.argv[1] == "list-users":
         list_users_nested()
+    elif sys.argv[1] == "list-groups":
+        list_groups_nested()
 
 if __name__ == '__main__':
     main()
