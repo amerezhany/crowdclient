@@ -22,8 +22,10 @@ args = parser.parse_args()
 actions_dic = {
     'add': '[usernames] [groups]',
     'remove': '[usernames] [groups]',
-    'list-users': '[group]',
-    'list-groups': '[user]',
+    'list-users': '[group/groups]',
+    'list-users-nested': '[group/groups]',
+    'list-groups': '[user/users]',
+    'list-groups-nested': '[user/users]',
 }
 
 def actions_usage():
@@ -42,10 +44,12 @@ if sys.argv[1] not in actions_dic:
     actions_usage()
     sys.exit()
 
-auth_user = raw_input('auth_user: ')
+#auth_user = raw_input('auth_user: ')
+auth_user = 'apex'
 
 try:
-    auth_pass = getpass.getpass()
+    #auth_pass = getpass.getpass()
+    auth_pass = 'apex123'
 except KeyboardInterrupt:
     print("\n" + "You have pressed ctrl-c, please try again.\n")
     sys.exit()
@@ -85,59 +89,63 @@ def users_groups_manip(act):
             except Exception:
                 print("\n" + sys.argv[0] + ": cannot update: `" + group + "' with user: `" + username + "'\n")
 
-def list_users_nested():
-    g = args.group_s.split(',')
-    group = ''
-    for i in g:
-        group += i
+def list_users(nested):
+    group_s_l = args.group_s.split(',')
+    for group in group_s_l:
+        try:
+            if nested:
+                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/group/user/nested?groupname=' + group
+            else:
+                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/group/user/direct?groupname=' + group
 
-    if len(g) > 1:
-        print("\n" + sys.argv[0] + ": Please specify only one group to list users of it'\n")
-        sys.exit()
+            s = requests.get(url_get, auth=(auth_user, auth_pass))
 
-    url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/group/user/nested?groupname=' + group
-    s = requests.get(url_get, auth=(auth_user, auth_pass))
+            if s.status_code != 200:
+                print("\n" + sys.argv[0] + ": no such group: `" + group + "'\n")
 
-    if s.status_code != 200:
-        print("\n" + sys.argv[0] + ": no such group: `" + group + "'\n")
-        sys.exit()
+            t = ET.fromstring(s.text)
+            print "\nUsers in group: `" + group + "':"
+            for user in t.findall('user'):
+                print user.get('name')
+        except Exception:
+            print("\n" + sys.argv[0] + ": cannot list the users of the group: `" + group + "'\n")
 
-    t = ET.fromstring(s.text)
-    print "\nUsers in group: `" + group + "':"
-    for user in t.findall('user'):
-        print user.get('name')
+def list_groups(nested):
+    username_s_l = args.username_s.split(',')
+    for username in username_s_l:
+        try:
+            if nested:
+                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/nested?username=' + username
+            else:
+                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/direct?username=' + username
 
-def list_groups_nested():
-    u = args.username_s.split(',')
-    user = ''
-    for i in u:
-        user += i
+            s = requests.get(url_get, auth=(auth_user, auth_pass))
 
-    if len(u) > 1:
-        print("\n" + sys.argv[0] + ": Please specify only one user to list groups he/she is a nested member of\n")
-        sys.exit()
+            if s.status_code != 200:
+                print("\n" + sys.argv[0] + ": no such user found: `" + username + "'\n")
 
-    url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/nested?username=' + user
-    s = requests.get(url_get, auth=(auth_user, auth_pass))
-
-    if s.status_code != 200:
-        print("\n" + sys.argv[0] + ": no such user found: `" + user + "'\n")
-        sys.exit()
-
-    t = ET.fromstring(s.text)
-    print "\nMembership of a user: `" + user + "':"
-    for group in t.findall('group'):
-        print group.get('name')
+            t = ET.fromstring(s.text)
+            print "\nMembership of a user: `" + username + "':"
+            for group in t.findall('group'):
+                print group.get('name')
+        except Exception:
+            print("\n" + sys.argv[0] + ": cannot list the groups of the user: `" + username + "'\n")
 
 def main():
     if sys.argv[1] == 'add':
         users_groups_manip("add")
     elif sys.argv[1] == "remove":
         users_groups_manip("remove")
+
     elif sys.argv[1] == "list-users":
-        list_users_nested()
+        list_users(False)
+    elif sys.argv[1] == "list-users-nested":
+        list_users(True)
+
     elif sys.argv[1] == "list-groups":
-        list_groups_nested()
+        list_groups(False)
+    elif sys.argv[1] == "list-groups-nested":
+        list_groups(True)
 
 if __name__ == '__main__':
     main()
