@@ -44,12 +44,10 @@ if sys.argv[1] not in actions_dic:
     actions_usage()
     sys.exit()
 
-#auth_user = raw_input('auth_user: ')
-auth_user = 'apex'
+auth_user = raw_input('auth_user: ')
 
 try:
-    #auth_pass = getpass.getpass()
-    auth_pass = 'apex123'
+    auth_pass = getpass.getpass()
 except KeyboardInterrupt:
     print("\n" + "You have pressed ctrl-c, please try again.\n")
     sys.exit()
