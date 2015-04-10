@@ -92,9 +92,9 @@ def list_users(nested):
     for group in group_s_l:
         try:
             if nested:
-                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/group/user/nested?groupname=' + group
+                url_get = crowd_url + '/group/user/nested?groupname=' + group
             else:
-                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/group/user/direct?groupname=' + group
+                url_get = crowd_url + '/group/user/direct?groupname=' + group
 
             s = requests.get(url_get, auth=(auth_user, auth_pass))
 
@@ -113,9 +113,9 @@ def list_groups(nested):
     for username in username_s_l:
         try:
             if nested:
-                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/nested?username=' + username
+                url_get = crowd_url + '/user/group/nested?username=' + username
             else:
-                url_get =  'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1' + '/user/group/direct?username=' + username
+                url_get = crowd_url + '/user/group/direct?username=' + username
 
             s = requests.get(url_get, auth=(auth_user, auth_pass))
 
