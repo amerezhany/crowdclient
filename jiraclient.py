@@ -22,10 +22,12 @@ args = parser.parse_args()
 actions_dic = {
     'add': '[usernames] [groups]',
     'remove': '[usernames] [groups]',
-    'list-users': '[group/groups]',
-    'list-users-nested': '[group/groups]',
-    'list-groups': '[user/users]',
-    'list-groups-nested': '[user/users]',
+    'list-user-of-group': '[group/groups]',
+    'list-user-nested-of-group': '[group/groups]',
+    'list-group-of-user': '[user/users]',
+    'list-group-nested-of-user': '[user/users]',
+    'list-group-of-group': '[group/groups]',
+    'list-group-nested-of-group': '[group/groups]',
 }
 
 def actions_usage():
@@ -59,7 +61,7 @@ if len(auth_pass) == 0:
 headers = {'content-type': 'application/xml'}
 crowd_url = 'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1'
 
-def users_groups_manip(act):
+def user_group_manip(act):
     # TODO: add code to check if particular user of group exists
     username_s_l = args.username_s.split(',')
     group_s_l = args.group_s.split(',')
@@ -87,7 +89,7 @@ def users_groups_manip(act):
             except Exception:
                 print("\n" + sys.argv[0] + ": cannot update: `" + group + "' with user: `" + username + "'\n")
 
-def list_users(nested):
+def list_user(nested):
     group_s_l = args.group_s.split(',')
     for group in group_s_l:
         try:
@@ -108,7 +110,7 @@ def list_users(nested):
         except Exception:
             print("\n" + sys.argv[0] + ": cannot list the users of the group: `" + group + "'\n")
 
-def list_groups(nested):
+def list_group(nested):
     username_s_l = args.username_s.split(',')
     for username in username_s_l:
         try:
@@ -129,21 +131,48 @@ def list_groups(nested):
         except Exception:
             print("\n" + sys.argv[0] + ": cannot list the groups of the user: `" + username + "'\n")
 
+def list_group_group(nested):
+    group_s_l = args.group_s.split(',')
+    for group in group_s_l:
+        try:
+            if nested:
+                url_get = crowd_url + '/group/child-group/direct?groupname=' + group
+            else:
+                url_get = crowd_url + '/group/child-group/nested?groupname=' + group
+
+            s = requests.get(url_get, auth=(auth_user, auth_pass))
+
+            if s.status_code != 200:
+                print("\n" + sys.argv[0] + ": no such group: `" + group + "'\n")
+
+            t = ET.fromstring(s.text)
+            print "\nGroups in group: `" + group + "':"
+            for user in t.findall('group'):
+                print user.get('name')
+        except Exception:
+            print("\n" + sys.argv[0] + ": cannot list the groups of the group: `" + group + "'\n")
+
+
 def main():
     if sys.argv[1] == 'add':
-        users_groups_manip("add")
+        user_group_manip("add")
     elif sys.argv[1] == "remove":
-        users_groups_manip("remove")
+        user_group_manip("remove")
 
-    elif sys.argv[1] == "list-users":
-        list_users(False)
-    elif sys.argv[1] == "list-users-nested":
-        list_users(True)
+    elif sys.argv[1] == "list-user-of-group":
+        list_user(False)
+    elif sys.argv[1] == "list-user-nested-of-group":
+        list_user(True)
 
-    elif sys.argv[1] == "list-groups":
-        list_groups(False)
-    elif sys.argv[1] == "list-groups-nested":
-        list_groups(True)
+    elif sys.argv[1] == "list-group-of-user":
+        list_group_user(False)
+    elif sys.argv[1] == "list-group-nested-of-user":
+        list_group(True)
+
+    elif sys.argv[1] == "list-group-of-group":
+        list_group_group(False)
+    elif sys.argv[1] == "list-group-nested-of-group":
+        list_group_group(True)
 
 if __name__ == '__main__':
     main()
