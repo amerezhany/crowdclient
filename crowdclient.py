@@ -57,12 +57,26 @@ except KeyboardInterrupt:
 if len(auth_pass) == 0:
     print("\n" + sys.argv[0] + ": you haven't supplied password. Please try again\n")
     sys.exit()
+    
+try:
+    crowd_hostname = open("/tmp/crowd_hostname", "r").read()
+    crowd_hostname = crowd_hostname.strip("\n")
+except IOError:
+    print("\n" + sys.argv[0] +\
+            ": please create file: `/tmp/crowd_hostname', e.g.: http://crowd.example.com:8095\n")
+    sys.exit()
+
+if len(crowd_hostname) == 0:
+    print(sys.argv[0] + ": please check your Crowd URL.\n")
+    sys.exit()
 
 headers = {'content-type': 'application/xml'}
-crowd_url = 'http://jira.ontrq.com:8095/crowd/rest/usermanagement/1'
+crowd_url = crowd_hostname + '/crowd/rest/usermanagement/1'
 
 def user_group_manip(act):
-    # TODO: add code to check if particular user of group exists
+    # TODO:
+    # * add code to check if particular user of group exists
+    # * add debug
     username_s_l = args.username_s.split(',')
     group_s_l = args.group_s.split(',')
     for username in username_s_l:
@@ -85,7 +99,6 @@ def user_group_manip(act):
                         print("User: `" + username + "' removed from `" + group + "'")
                     else:
                         print("User: `" + username + "' was not removed from `" + group + "'")
-
             except Exception:
                 print("\n" + sys.argv[0] + ": cannot update: `" + group + "' with user: `" + username + "'\n")
 
