@@ -1,5 +1,5 @@
 About:
-Crowd REST helper script
+Crowd REST users/groups manipulation script
 
 Requirements:
 http://www.python-requests.org/en/latest/
