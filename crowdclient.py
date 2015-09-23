@@ -73,6 +73,7 @@ if len(crowd_hostname) == 0:
 headers = {'content-type': 'application/xml'}
 crowd_url = crowd_hostname + '/crowd/rest/usermanagement/1'
 
+
 def user_group_manip(act):
     # TODO:
     # * add code to check if particular user of group exists
