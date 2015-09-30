@@ -179,7 +179,7 @@ def main():
         list_user(True)
 
     elif sys.argv[1] == "list-group-of-user":
-        list_group_user(False)
+        list_group(False)
     elif sys.argv[1] == "list-group-nested-of-user":
         list_group(True)
 
