@@ -6,6 +6,7 @@ import getpass
 import argparse
 import requests
 import xml.etree.ElementTree as ET
+import ConfigParser
 
 # parse options/arguments
 parser = argparse.ArgumentParser(description="jira manipulation cli")
@@ -46,24 +47,32 @@ if sys.argv[1] not in actions_dic:
     actions_usage()
     sys.exit()
 
-auth_user = raw_input('auth_user: ')
+config = ConfigParser.ConfigParser()
+config_file = '/tmp/crowdclient.cfg'
 
 try:
-    auth_pass = getpass.getpass()
-except KeyboardInterrupt:
-    print("\n" + "You have pressed ctrl-c, please try again.\n")
-    sys.exit()
+    config.read(config_file)
+    auth_user      = config.get('credentials', 'username')
+    auth_pass      = config.get('credentials', 'password')
+    crowd_hostname = config.get('credentials', 'hostname')
+except:
+    auth_user      = raw_input('auth_user: ')
+    auth_pass      = getpass.getpass()
+    crowd_hostname = raw_input('crowd_hostname: ')
+
+    if config.has_section('credentials'):
+        pass
+    else:
+        config.add_section('credentials')
+        config.set('credentials', 'username', auth_user)
+        config.set('credentials', 'password', auth_pass)
+        config.set('credentials', 'hostname', crowd_hostname)
+
+        with open(config_file, 'wb') as configfile:
+            config.write(configfile)
 
 if len(auth_pass) == 0:
     print("\n" + sys.argv[0] + ": you haven't supplied password. Please try again\n")
-    sys.exit()
-    
-try:
-    crowd_hostname = open("/tmp/crowd_hostname", "r").read()
-    crowd_hostname = crowd_hostname.strip("\n")
-except IOError:
-    print("\n" + sys.argv[0] +\
-            ": please create file: `/tmp/crowd_hostname', e.g.: http://crowd.example.com:8095\n")
     sys.exit()
 
 if len(crowd_hostname) == 0:
