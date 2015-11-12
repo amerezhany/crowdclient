@@ -21,20 +21,28 @@ args = parser.parse_args()
 
 # helper _actions_ dictionary
 actions_dic = {
-    'add': '[usernames] [groups]',
-    'remove': '[usernames] [groups]',
-    'list-user-of-group': '[group/groups]',
-    'list-user-nested-of-group': '[group/groups]',
-    'list-group-of-user': '[user/users]',
-    'list-group-nested-of-user': '[user/users]',
-    'list-group-of-group': '[group/groups]',
+    'add': '                       [usernames] [groups]',
+    'remove': '                    [usernames] [groups]',
+    'list-user-of-group': '        [group/groups]',
+    'list-user-nested-of-group': ' [group/groups]',
+    'list-group-of-user': '        [user/users]',
+    'list-group-nested-of-user': ' [user/users]',
+    'list-group-of-group': '       [group/groups]',
     'list-group-nested-of-group': '[group/groups]',
 }
 
 def actions_usage():
-    print("Please use the following actions:\n")
+    print("actions:")
     for i in actions_dic:
-        print(i + " " + actions_dic[i])
+        print("  " + i + "     " + actions_dic[i])
+
+    print(
+    """
+credentials:
+  auth_user                      Atlassian Crowd application user
+  auth_pass                      Atlassian Crowd application pass
+  crowd_hostname                 Atlassian Crowd URL
+    """  )
 
 # if no additional arguments supplied
 if len(sys.argv) < 3:
